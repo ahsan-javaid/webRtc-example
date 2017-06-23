@@ -2,23 +2,40 @@ var localVideo;
 var remoteVideo;
 var peerConnection;
 var uuid;
-
-var peerConnectionConfig = {
+//
+// var peerConnectionConfig = {
+//     'iceServers': [
+//         {'urls': 'stun:stun.services.mozilla.com'},
+//         {'urls': 'stun:stun.l.google.com:19302'},
+//         {
+//             username: 'e7db750a-2fcc-40c6-8415-cab22743a68a',
+//             url: 'turn:turn1.xirsys.com:443?transport=udp',
+//             credential: '287ae254-9380-4f81-af88-e1cc9ed27eb0'
+//         },
+//         {
+//             username: 'e7db750a-2fcc-40c6-8415-cab22743a68a',
+//             url: 'turn:turn1.xirsys.com:443?transport=tcp',
+//             credential: '287ae254-9380-4f81-af88-e1cc9ed27eb0'
+//         }
+//     ]
+// };
+var peerConnectionConfig ={
     'iceServers': [
-        {'urls': 'stun:stun.services.mozilla.com'},
-        {'urls': 'stun:stun.l.google.com:19302'},
         {
-            username: 'e7db750a-2fcc-40c6-8415-cab22743a68a',
-            url: 'turn:turn1.xirsys.com:443?transport=udp',
-            credential: '287ae254-9380-4f81-af88-e1cc9ed27eb0'
+            'url': 'stun:stun.l.google.com:19302'
         },
         {
-            username: 'e7db750a-2fcc-40c6-8415-cab22743a68a',
-            url: 'turn:turn1.xirsys.com:443?transport=tcp',
-            credential: '287ae254-9380-4f81-af88-e1cc9ed27eb0'
+            'url': 'turn:192.158.29.39:3478?transport=udp',
+            'credential': 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+            'username': '28224511:1379330808'
+        },
+        {
+            'url': 'turn:192.158.29.39:3478?transport=tcp',
+            'credential': 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+            'username': '28224511:1379330808'
         }
     ]
-};
+}
 
 function pageReady() {
     uuid = uuid();
