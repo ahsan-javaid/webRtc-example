@@ -8,8 +8,19 @@ var peerConnectionConfig = {
         {'urls': 'stun:stun.l.google.com:19302'}
     ]
 };
-
-
+peerConnectionConfig = {
+    'iceServers':
+        [
+            {
+                "url": "stun:global.stun.twilio.com:3478?transport=udp"
+            },
+            {
+                "credential": "M87Dd74GbNfyrAydvEKiDR43go52fo6ldoJBHB6gim0=",
+                "url": "turn:global.turn.twilio.com:3478?transport=udp",
+                "username": "b759d275ddc641cd379f329882abe3c0618c8afdfc5e24be1b4d59482244240f"
+            }
+        ]
+};
 function pageReady() {
     uuid = uuid();
 
