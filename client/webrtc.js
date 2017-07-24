@@ -3,11 +3,7 @@ var remoteVideo;
 var peerConnection;
 var uuid;
 //
-var peerConnectionConfig = {
-    'iceServers': [
-        {'urls': 'stun:stun.l.google.com:19302'}
-    ]
-};
+var peerConnectionConfig = {};
 peerConnectionConfig = {
     "iceServers":[
         {
@@ -45,6 +41,34 @@ peerConnectionConfig = {
         }
     ]
 };
+
+var iceServers = [];
+
+iceServers.push({
+    url: 'stun:stun.l.google.com:19302'
+});
+
+iceServers.push({
+    url: 'stun:stun.anyfirewall.com:3478'
+});
+
+iceServers.push({
+    url: 'turn:turn.bistri.com:80',
+    credential: 'homeo',
+    username: 'homeo'
+});
+
+iceServers.push({
+    url: 'turn:turn.anyfirewall.com:443?transport=tcp',
+    credential: 'webrtc',
+    username: 'webrtc'
+});
+
+var iceServersObject = {
+    iceServers: iceServers
+};
+peerConnection = iceServersObject
+
 function pageReady() {
     uuid = uuid();
 
@@ -72,7 +96,11 @@ function getUserMediaSuccess(stream) {
 }
 
 function start(isCaller) {
-    peerConnection = new RTCPeerConnection(peerConnectionConfig);
+    peerConnection = new RTCPeerConnection(peerConnectionConfig,{
+        optional: [{
+            DtlsSrtpKeyAgreement: true
+        }]
+    });
     peerConnection.onicecandidate = gotIceCandidate;
     peerConnection.onaddstream = gotRemoteStream;
     peerConnection.addStream(localStream);
