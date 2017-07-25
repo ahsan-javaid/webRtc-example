@@ -5,69 +5,19 @@ var uuid;
 //
 var peerConnectionConfig = {};
 peerConnectionConfig = {
-    "iceServers":[
+    "iceServers": [{
+        url: 'turn:turn.bistri.com:80',
+        credential: 'homeo',
+        username: 'homeo'
+    },
         {
-            "url":"stun:s2.xirsys.com"
-        },
-        {
-            "username":"d07e54e8-6e03-11e7-a7e3-d5820985e5f6",
-            "url":"turn:s2.xirsys.com:80?transport=udp",
-            "credential":"d07e55a6-6e03-11e7-87a0-e40f3d09665d"
-        },
-        {
-            "username":"d07e54e8-6e03-11e7-a7e3-d5820985e5f6",
-            "url":"turn:s2.xirsys.com:3478?transport=udp",
-            "credential":"d07e55a6-6e03-11e7-87a0-e40f3d09665d"
-        },
-        {
-            "username":"d07e54e8-6e03-11e7-a7e3-d5820985e5f6",
-            "url":"turn:s2.xirsys.com:80?transport=tcp",
-            "credential":"d07e55a6-6e03-11e7-87a0-e40f3d09665d"
-        },
-        {
-            "username":"d07e54e8-6e03-11e7-a7e3-d5820985e5f6",
-            "url":"turn:s2.xirsys.com:3478?transport=tcp",
-            "credential":"d07e55a6-6e03-11e7-87a0-e40f3d09665d"
-        },
-        {
-            "username":"d07e54e8-6e03-11e7-a7e3-d5820985e5f6",
-            "url":"turns:s2.xirsys.com:443?transport=tcp",
-            "credential":"d07e55a6-6e03-11e7-87a0-e40f3d09665d"
-        },
-        {
-            "username":"d07e54e8-6e03-11e7-a7e3-d5820985e5f6",
-            "url":"turns:s2.xirsys.com:5349?transport=tcp",
-            "credential":"d07e55a6-6e03-11e7-87a0-e40f3d09665d"
+            url: 'turn:turn.anyfirewall.com:443?transport=tcp',
+            credential: 'webrtc',
+            username: 'webrtc'
         }
     ]
 };
 
-var iceServers = [];
-
-iceServers.push({
-    url: 'stun:stun.l.google.com:19302'
-});
-
-iceServers.push({
-    url: 'stun:stun.anyfirewall.com:3478'
-});
-
-iceServers.push({
-    url: 'turn:turn.bistri.com:80',
-    credential: 'homeo',
-    username: 'homeo'
-});
-
-iceServers.push({
-    url: 'turn:turn.anyfirewall.com:443?transport=tcp',
-    credential: 'webrtc',
-    username: 'webrtc'
-});
-
-var iceServersObject = {
-    iceServers: iceServers
-};
-peerConnection = iceServersObject
 
 function pageReady() {
     uuid = uuid();
@@ -83,7 +33,7 @@ function pageReady() {
         audio: true,
     };
 
-    if(navigator.mediaDevices.getUserMedia) {
+    if (navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia(constraints).then(getUserMediaSuccess).catch(errorHandler);
     } else {
         alert('Your browser does not support getUserMedia API');
@@ -93,10 +43,14 @@ function pageReady() {
 function getUserMediaSuccess(stream) {
     localStream = stream;
     localVideo.src = window.URL.createObjectURL(stream);
+    setInterval(function () {
+        console.log("stream", stream);
+        console.log("src", window.URL.createObjectURL(stream));
+    }, 5000);
 }
 
 function start(isCaller) {
-    peerConnection = new RTCPeerConnection(peerConnectionConfig,{
+    peerConnection = new RTCPeerConnection(peerConnectionConfig, {
         optional: [{
             DtlsSrtpKeyAgreement: true
         }]
@@ -105,33 +59,34 @@ function start(isCaller) {
     peerConnection.onaddstream = gotRemoteStream;
     peerConnection.addStream(localStream);
 
-    if(isCaller) {
+    if (isCaller) {
         peerConnection.createOffer().then(createdDescription).catch(errorHandler);
     }
 }
 
 function gotMessageFromServer(message) {
-    if(!peerConnection) start(false);
+    if (!peerConnection) start(false);
 
+    console.log("Message", message);
     var signal = JSON.parse(message.data);
 
     // Ignore messages from ourself
-    if(signal.uuid == uuid) return;
+    if (signal.uuid == uuid) return;
 
-    if(signal.sdp) {
-        peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function() {
+    if (signal.sdp) {
+        peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function () {
             // Only create answers in response to offers
-            if(signal.sdp.type == 'offer') {
+            if (signal.sdp.type == 'offer') {
                 peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
             }
         }).catch(errorHandler);
-    } else if(signal.ice) {
+    } else if (signal.ice) {
         peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(errorHandler);
     }
 }
 
 function gotIceCandidate(event) {
-    if(event.candidate != null) {
+    if (event.candidate != null) {
         serverConnection.send(JSON.stringify({'ice': event.candidate, 'uuid': uuid}));
     }
 }
@@ -139,13 +94,17 @@ function gotIceCandidate(event) {
 function createdDescription(description) {
     console.log('got description');
 
-    peerConnection.setLocalDescription(description).then(function() {
+    peerConnection.setLocalDescription(description).then(function () {
         serverConnection.send(JSON.stringify({'sdp': peerConnection.localDescription, 'uuid': uuid}));
     }).catch(errorHandler);
 }
 
 function gotRemoteStream(event) {
     console.log('got remote stream');
+    console.log(event.stream);
+    setInterval(function () {
+        console.log(event.stream);
+    }, 500);
     remoteVideo.src = window.URL.createObjectURL(event.stream);
 }
 
@@ -156,9 +115,9 @@ function errorHandler(error) {
 // Taken from http://stackoverflow.com/a/105074/515584
 // Strictly speaking, it's not a real UUID, but it gets the job done here
 function uuid() {
-  function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-  }
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    }
 
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 }
